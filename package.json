@@ -1,0 +1,21 @@
+{
+  "name": "building_mini_gpt_from_scratch",
+  "version": "1.0.0",
+  "description": "",
+  "main": "tokenizer.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sawastik7-bit/building_mini_gpt_from_scratch.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/sawastik7-bit/building_mini_gpt_from_scratch/issues"
+  },
+  "homepage": "https://github.com/sawastik7-bit/building_mini_gpt_from_scratch#readme"
+}

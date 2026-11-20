@@ -1,11 +1,8 @@
 
-let vocabulary = new Set(); // Stores all tokens
-let merges = [];            // Stores learned merge rules
+let vocabulary = new Set();
+let merges = [];
 
-
-// 1. TOKENIZE
 function tokenize(text) {
-
     if (!text.trim()) {
         console.log("There is no textual data to split");
         return [];
@@ -17,8 +14,8 @@ function tokenize(text) {
     for (let word of words) {
         let arr = [];
 
-        for (let i = 0; i < word.length; i++) {
-            arr.push(word[i]);
+        for (let char of word) {
+            arr.push(char);
         }
 
         tokenized_array.push(arr);
@@ -27,20 +24,14 @@ function tokenize(text) {
     return tokenized_array;
 }
 
-
-// 2. COUNT ADJACENT PAIRS
 function countPairs(words) {
-
     let pairCounts = new Map();
 
     for (let word of words) {
-
         for (let i = 0; i < word.length - 1; i++) {
-
             let left = word[i];
             let right = word[i + 1];
 
-            // Unique key for each token pair
             let pairKey = JSON.stringify([left, right]);
 
             pairCounts.set(
@@ -53,24 +44,19 @@ function countPairs(words) {
     return pairCounts;
 }
 
-
-// 3. FIND MOST FREQUENT PAIR
 function getMostFrequentPair(pairCounts) {
-
     let bestPair = null;
     let maxCount = 0;
 
     for (let [pairKey, count] of pairCounts) {
-
         if (count > maxCount) {
-
             maxCount = count;
 
             let [left, right] = JSON.parse(pairKey);
 
             bestPair = {
-                left: left,
-                right: right,
+                left,
+                right,
                 result: left + right
             };
         }
@@ -79,32 +65,22 @@ function getMostFrequentPair(pairCounts) {
     return bestPair;
 }
 
-
-// 4. MERGE THE SELECTED PAIR
 function mergePair(tokenized_text_array, pair) {
-
     let final_merged_array = [];
 
     for (let word of tokenized_text_array) {
-
         let merged_pair_array = [];
 
         for (let i = 0; i < word.length; i++) {
-
             if (
                 i < word.length - 1 &&
                 word[i] === pair.left &&
                 word[i + 1] === pair.right
             ) {
-
                 merged_pair_array.push(pair.result);
-
-                i++; // Skip the next token because it was merged
-
+                i++;
             } else {
-
                 merged_pair_array.push(word[i]);
-
             }
         }
 
@@ -114,58 +90,36 @@ function mergePair(tokenized_text_array, pair) {
     return final_merged_array;
 }
 
-
-// 5. TRAIN THE TOKENIZER
 function train(raw_text_string, number_of_iterations) {
-
-    // Reset previous training data
     vocabulary.clear();
     merges = [];
 
-    // Initial tokenization
     let splitted_text_array = tokenize(raw_text_string);
 
-    // Add original character tokens to vocabulary
     for (let word of splitted_text_array) {
         for (let token of word) {
             vocabulary.add(token);
         }
     }
 
-    console.log("Initial tokens:", splitted_text_array);
-    console.log("Initial vocabulary:", [...vocabulary]);
-
-    // BPE training loop
     for (let i = 0; i < number_of_iterations; i++) {
-
-        // 1. Count adjacent pairs
         let pair_count = countPairs(splitted_text_array);
-
-        // 2. Find most frequent pair
         let best_pair = getMostFrequentPair(pair_count);
 
-        // 3. Stop if no pairs exist
-        if (!best_pair) {
-            console.log("No more pairs available.");
-            break;
-        }
+        if (!best_pair) break;
 
-        // 4. Merge the selected pair
         splitted_text_array = mergePair(
             splitted_text_array,
             best_pair
         );
 
-        // 5. Add newly created token to vocabulary
         vocabulary.add(best_pair.result);
-
-        // 6. Store the complete merge rule
         merges.push(best_pair);
 
-        console.log(`\nIteration ${i + 1}:`);
         console.log(
-            `${best_pair.left} + ${best_pair.right} = ${best_pair.result}`
+            `Iteration ${i + 1}: ${best_pair.left} + ${best_pair.right} = ${best_pair.result}`
         );
+
         console.log(splitted_text_array);
     }
 
@@ -173,7 +127,6 @@ function train(raw_text_string, number_of_iterations) {
 }
 
 function createTokenIDs(vocabulary) {
-
     let tokenToId = new Map();
     let id = 0;
 
@@ -185,9 +138,48 @@ function createTokenIDs(vocabulary) {
     return tokenToId;
 }
 
+function encode(text, tokenToId) {
+    let tokenized_array = tokenize(text);
+    let encoded_words = [];
 
+    for (let word of tokenized_array) {
+        let tokens = word;
 
-// 6. RUN TRAINING
+        for (let merge of merges) {
+            let merged_word = [];
+
+            for (let i = 0; i < tokens.length; i++) {
+                if (
+                    i < tokens.length - 1 &&
+                    tokens[i] === merge.left &&
+                    tokens[i + 1] === merge.right
+                ) {
+                    merged_word.push(merge.result);
+                    i++;
+                } else {
+                    merged_word.push(tokens[i]);
+                }
+            }
+
+            tokens = merged_word;
+        }
+
+        let token_ids = [];
+
+        for (let token of tokens) {
+            if (!tokenToId.has(token)) {
+                throw new Error(`Unknown token: ${token}`);
+            }
+
+            token_ids.push(tokenToId.get(token));
+        }
+
+        encoded_words.push(token_ids);
+    }
+
+    return encoded_words;
+}
+
 let raw_text_string = "low lower lowest";
 let number_of_iterations = 10;
 
@@ -198,19 +190,15 @@ let final_trained_data = train(
 
 let tokenToId = createTokenIDs(vocabulary);
 
-console.log([...tokenToId.entries()]);
+console.log("Final trained data:", final_trained_data);
+console.log("Vocabulary:", [...vocabulary]);
+console.log("Token IDs:", [...tokenToId.entries()]);
+console.log("Merge rules:", merges);
+console.log("Vocabulary size:", vocabulary.size);
+console.log("Total merges:", merges.length);
 
-// 7. DISPLAY RESULTS
-console.log("\n========== TRAINING COMPLETE ==========");
+let new_sentence = "low lowest";
+let encoded_result = encode(new_sentence, tokenToId);
 
-console.log("Final trained data:");
-console.log(final_trained_data);
-
-console.log("\nComplete vocabulary:");
-console.log([...vocabulary]);
-
-console.log("\nLearned merge rules:");
-console.log(merges);
-
-console.log("\nTotal vocabulary size:", vocabulary.size);
-console.log("Total merges learned:", merges.length);
+console.log("New sentence:", new_sentence);
+console.log("Encoded result:", encoded_result);
