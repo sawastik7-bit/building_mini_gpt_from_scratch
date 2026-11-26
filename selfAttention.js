@@ -1,14 +1,11 @@
 
-
-const input = [   // 3 input token with 4 dimensions 
+const input = [
     [0.2, 0.5, 0.1, 0.3],
     [0.4, 0.1, 0.6, 0.2],
     [0.3, 0.7, 0.2, 0.5]
 ];
 
-
-// initialize the weight matrices WQ, WK, and WV
-
+// 1. Initialize weight matrices
 
 function initializeWeights(inputDim, outputDim) {
     const weights = [];
@@ -32,10 +29,16 @@ const embeddingDim = 4;
 const WQ = initializeWeights(embeddingDim, embeddingDim);
 const WK = initializeWeights(embeddingDim, embeddingDim);
 const WV = initializeWeights(embeddingDim, embeddingDim);
+const WO = initializeWeights(embeddingDim, embeddingDim);
 
 
+// 2. Matrix multiplication
 
 function matrixMultiply(A, B) {
+    if (A[0].length !== B.length) {
+        throw new Error("Incompatible matrix dimensions");
+    }
+
     const result = [];
 
     for (let i = 0; i < A.length; i++) {
@@ -58,6 +61,8 @@ function matrixMultiply(A, B) {
 }
 
 
+// 3. Generate Q, K, V
+
 const Q = matrixMultiply(input, WQ);
 const K = matrixMultiply(input, WK);
 const V = matrixMultiply(input, WV);
@@ -65,6 +70,9 @@ const V = matrixMultiply(input, WV);
 console.log("Query:", Q);
 console.log("Key:", K);
 console.log("Value:", V);
+
+
+// 4. Transpose matrix
 
 function transpose(matrix) {
     const result = [];
@@ -83,19 +91,22 @@ function transpose(matrix) {
 }
 
 
+// 5. Calculate attention scores: Q × K transpose
 
 function calculateAttentionScores(Q, K) {
     const transposedK = transpose(K);
 
-    const scores = matrixMultiply(Q, transposedK);
-
-    return scores;
+    return matrixMultiply(Q, transposedK);
 }
 
-let scores=calculateAttentionScores(Q,K);
+const scores = calculateAttentionScores(Q, K);
+
+console.log("Attention Scores:", scores);
 
 
-function scaleAttentionScores(scores, keyDim) {   // decreasing large positive values so that its easy to apply soft max
+// 6. Scale attention scores
+
+function scaleAttentionScores(scores, keyDim) {
     const scale = Math.sqrt(keyDim);
 
     return scores.map(row =>
@@ -103,10 +114,14 @@ function scaleAttentionScores(scores, keyDim) {   // decreasing large positive v
     );
 }
 
+const scaledScores = scaleAttentionScores(scores, embeddingDim);
 
- 
-function applyCausalMask(scores) {     // during training phase no token should be able to see its future tokens 
+console.log("Scaled Scores:", scaledScores);
 
+
+// 7. Apply causal masking
+
+function applyCausalMask(scores) {
     const maskedScores = scores.map(row => [...row]);
 
     for (let i = 0; i < maskedScores.length; i++) {
@@ -118,8 +133,12 @@ function applyCausalMask(scores) {     // during training phase no token should 
     return maskedScores;
 }
 
+const maskedScores = applyCausalMask(scaledScores);
 
-// converting scores to probabilities
+console.log("Masked Scores:", maskedScores);
+
+
+// 8. Softmax
 
 function softmax(row) {
     const maxScore = Math.max(...row);
@@ -136,25 +155,33 @@ function softmax(row) {
     return exponentials.map(value => value / total);
 }
 
-
-
 function softmaxMatrix(scores) {
     return scores.map(row => softmax(row));
 }
 
+const attentionWeights = softmaxMatrix(maskedScores);
 
-// now the weighted sum to find values 
+console.log("Attention Weights:", attentionWeights);
+
+
+// 9. Calculate attention output: Attention × V
 
 function calculateAttentionOutput(attentionWeights, V) {
-    const output = matrixMultiply(attentionWeights, V);
-
-    return output;
+    return matrixMultiply(attentionWeights, V);
 }
-
 
 const attentionOutput = calculateAttentionOutput(
     attentionWeights,
     V
 );
 
-console.log(attentionOutput);
+console.log("Attention Output:", attentionOutput);
+
+
+// 10. Output projection: Attention Output × WO
+
+const projectedOutput = matrixMultiply(attentionOutput, WO);
+
+console.log("Projected Output:", projectedOutput);
+
+
