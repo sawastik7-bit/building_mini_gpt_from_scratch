@@ -1,5 +1,5 @@
 
-function normalize(input_matrix) {
+function normalize(input_matrix,gamma_matrix,beta_matrix) {
 
     let mean_matrix = [];
 
@@ -50,7 +50,11 @@ function normalize(input_matrix) {
             let normalized_value =
                 (input_matrix[i][j] - mean_matrix[i]) /
                 standard_deviation;
+                 
+                const adjusted_value =
+    gamma_matrix[j] * normalized_value + beta_matrix[j];
 
+normalized_row.push(adjusted_value);
             normalized_row.push(normalized_value);
         }
 
