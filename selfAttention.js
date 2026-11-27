@@ -7,7 +7,7 @@ const input = [
 
 // 1. Initialize weight matrices
 
-function initializeWeights(inputDim, outputDim) {
+export function initializeWeights(inputDim, outputDim) {
     const weights = [];
 
     for (let i = 0; i < inputDim; i++) {
@@ -34,7 +34,7 @@ const WO = initializeWeights(embeddingDim, embeddingDim);
 
 // 2. Matrix multiplication
 
-function matrixMultiply(A, B) {
+export function matrixMultiply(A, B) {
     if (A[0].length !== B.length) {
         throw new Error("Incompatible matrix dimensions");
     }

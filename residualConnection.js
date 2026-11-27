@@ -1,5 +1,5 @@
 
-function residualConnection(originalMatrix, projectedMatrix) {
+export function residualConnection(originalMatrix, projectedMatrix) {
 
     if (
         originalMatrix.length !== projectedMatrix.length ||
