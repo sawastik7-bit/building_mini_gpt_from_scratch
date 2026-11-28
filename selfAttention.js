@@ -74,7 +74,7 @@ console.log("Value:", V);
 
 // 4. Transpose matrix
 
-function transpose(matrix) {
+export function transpose(matrix) {
     const result = [];
 
     for (let col = 0; col < matrix[0].length; col++) {
@@ -93,7 +93,7 @@ function transpose(matrix) {
 
 // 5. Calculate attention scores: Q × K transpose
 
-function calculateAttentionScores(Q, K) {
+export function calculateAttentionScores(Q, K) {
     const transposedK = transpose(K);
 
     return matrixMultiply(Q, transposedK);
@@ -106,7 +106,7 @@ console.log("Attention Scores:", scores);
 
 // 6. Scale attention scores
 
-function scaleAttentionScores(scores, keyDim) {
+export function scaleAttentionScores(scores, keyDim) {
     const scale = Math.sqrt(keyDim);
 
     return scores.map(row =>
@@ -155,7 +155,7 @@ function softmax(row) {
     return exponentials.map(value => value / total);
 }
 
-function softmaxMatrix(scores) {
+export function softmaxMatrix(scores) {
     return scores.map(row => softmax(row));
 }
 
@@ -166,7 +166,7 @@ console.log("Attention Weights:", attentionWeights);
 
 // 9. Calculate attention output: Attention × V
 
-function calculateAttentionOutput(attentionWeights, V) {
+export function calculateAttentionOutput(attentionWeights, V) {
     return matrixMultiply(attentionWeights, V);
 }
 
